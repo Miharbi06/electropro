@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ElectroPro – Électricité & Électronique</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet">
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --yellow: #F5C400;
+    --dark: #1035A0;
+    --mid: #0D2D94;
+    --card: #0F2F9E;
+    --card-hover: #1640B8;
+    --border: #2855CC;
+    --text: #FFFFFF;
+    --muted: #A8C0F0;
+    --accent: #FF6B00;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--dark); color: var(--text); font-family: 'Barlow', sans-serif; overflow-x: hidden; cursor: none; }
+
+  .cursor { width: 10px; height: 10px; background: var(--yellow); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transition: transform 0.1s; mix-blend-mode: difference; }
+  .cursor-ring { width: 36px; height: 36px; border: 2px solid var(--yellow); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9998; transition: all 0.15s ease; opacity: 0.6; }
+
+  nav { position: fixed; top: 0; width: 100%; z-index: 100; padding: 20px 60px; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(to bottom, rgba(16,53,160,0.97), transparent); backdrop-filter: blur(6px); }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 3px; color: var(--yellow); }
+  .logo span { color: rgba(255,255,255,0.85); }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; position: relative; }
+  .nav-links a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: var(--yellow); transition: width 0.3s; }
+  .nav-links a:hover { color: var(--yellow); }
+  .nav-links a:hover::after { width: 100%; }
+
+  .hero { min-height: 100vh; display: flex; align-items: center; padding: 0 60px; position: relative; overflow: hidden; }
+  .hero-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 90% at 75% 50%, rgba(245,196,0,0.12) 0%, transparent 65%), radial-gradient(ellipse 50% 70% at 10% 60%, rgba(5,15,80,0.6) 0%, transparent 60%), radial-gradient(ellipse 40% 50% at 50% 100%, rgba(255,107,0,0.07) 0%, transparent 60%); }
+  .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 60px 60px; }
+  .hero-bolt { position: absolute; right: 6%; top: 50%; transform: translateY(-50%); font-size: 30rem; opacity: 0.08; line-height: 1; animation: pulse 4s ease-in-out infinite; user-select: none; filter: drop-shadow(0 0 80px rgba(245,196,0,0.3)); }
+  @keyframes pulse { 0%, 100% { opacity: 0.08; transform: translateY(-50%) scale(1); } 50% { opacity: 0.14; transform: translateY(-50%) scale(1.02); } }
+  .hero-content { position: relative; z-index: 2; max-width: 720px; }
+  .hero-tag { display: inline-flex; align-items: center; gap: 10px; background: rgba(245,196,0,0.15); border: 1px solid rgba(245,196,0,0.4); padding: 8px 18px; border-radius: 2px; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: var(--yellow); margin-bottom: 30px; animation: fadeIn 0.8s ease forwards; }
+  .hero-tag::before { content: ''; width: 6px; height: 6px; background: var(--yellow); border-radius: 50%; animation: blink 1.5s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .hero h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(4rem, 9vw, 8rem); line-height: 0.9; letter-spacing: 2px; margin-bottom: 12px; animation: fadeIn 0.8s 0.2s ease both; }
+  .hero h1 em { color: var(--yellow); font-style: normal; display: block; text-shadow: 0 0 60px rgba(245,196,0,0.3); }
+  .hero-sub { font-size: 1.1rem; font-weight: 300; color: var(--muted); line-height: 1.7; max-width: 500px; margin-bottom: 50px; animation: fadeIn 0.8s 0.4s ease both; }
+  .hero-actions { display: flex; gap: 20px; align-items: center; animation: fadeIn 0.8s 0.6s ease both; }
+
+  .btn-primary { background: var(--yellow); color: #0D2D94; padding: 16px 40px; font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; display: inline-block; border: none; cursor: none; transition: all 0.3s; position: relative; overflow: hidden; }
+  .btn-primary::before { content: ''; position: absolute; inset: 0; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+  .btn-primary:hover::before { transform: scaleX(1); }
+  .btn-primary span { position: relative; z-index: 1; }
+  .btn-secondary { color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; transition: color 0.3s; }
+  .btn-secondary:hover { color: var(--yellow); }
+  .btn-secondary::before { content: ''; width: 30px; height: 1px; background: currentColor; transition: width 0.3s; }
+  .btn-secondary:hover::before { width: 50px; }
+
+  .hero-stats { position: absolute; bottom: 60px; right: 60px; display: flex; gap: 60px; animation: fadeIn 0.8s 0.8s ease both; }
+  .stat { text-align: right; }
+  .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--yellow); line-height: 1; text-shadow: 0 0 30px rgba(245,196,0,0.4); }
+  .stat-label { font-size: 0.75rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+
+  section { padding: 120px 60px; }
+  .section-label { font-size: 0.7rem; letter-spacing: 4px; text-transform: uppercase; color: var(--yellow); margin-bottom: 16px; display: flex; align-items: center; gap: 14px; }
+  .section-label::before { content: ''; width: 40px; height: 1px; background: var(--yellow); }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 5vw, 4rem); line-height: 1; letter-spacing: 1px; }
+
+  .services { background: var(--mid); }
+  .services-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 80px; }
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+  .service-card { background: var(--card); padding: 50px 40px; position: relative; overflow: hidden; transition: background 0.4s; border-top: 3px solid transparent; }
+  .service-card:hover { background: var(--card-hover); border-color: var(--yellow); }
+  .service-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 0; background: linear-gradient(to top, rgba(245,196,0,0.06), transparent); transition: height 0.4s; }
+  .service-card:hover::after { height: 100%; }
+  .service-icon { font-size: 2.5rem; margin-bottom: 24px; display: block; }
+  .service-num { position: absolute; top: 30px; right: 30px; font-family: 'Bebas Neue', sans-serif; font-size: 4rem; color: rgba(255,255,255,0.06); line-height: 1; transition: color 0.4s; }
+  .service-card:hover .service-num { color: rgba(245,196,0,0.12); }
+  .service-card h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+  .service-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; }
+
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .about-visual { position: relative; }
+  .about-img-frame { width: 100%; aspect-ratio: 4/5; background: var(--card); border: 1px solid var(--border); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .about-img-frame .bolt-bg { position: absolute; font-size: 14rem; opacity: 0.08; color: var(--yellow); }
+  .about-photo { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+  .about-accent { position: absolute; bottom: -20px; right: -20px; width: 180px; height: 180px; background: var(--yellow); z-index: -1; }
+  .about-badge { position: absolute; bottom: 30px; left: -30px; background: var(--yellow); color: #0D2D94; padding: 20px 24px; z-index: 2; }
+  .about-badge-num { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; line-height: 1; }
+  .about-badge-text { font-size: 0.7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .about-content .section-title { margin-bottom: 30px; }
+  .about-content p { color: var(--muted); line-height: 1.8; margin-bottom: 20px; font-weight: 300; }
+  .skills-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 40px; }
+  .skill-item { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: var(--muted); }
+  .skill-item::before { content: '▸'; color: var(--yellow); font-size: 0.7rem; }
+
+  /* RÉALISATIONS */
+  .realisations { background: var(--mid); }
+  .real-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 50px; }
+
+  .btn-add-photo { display: none; align-items: center; gap: 10px; background: var(--yellow); color: #0D2D94; padding: 14px 28px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.95rem; letter-spacing: 2px; text-transform: uppercase; border: none; cursor: none; transition: background 0.3s; }
+  .btn-add-photo.visible { display: inline-flex; }
+  .btn-add-photo:hover { background: #ffd120; }
+  .btn-admin-login { background: none; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.2); padding: 10px 14px; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; cursor: none; transition: all 0.3s; font-family: 'Barlow', sans-serif; }
+  .btn-admin-login:hover { border-color: rgba(245,196,0,0.4); color: rgba(245,196,0,0.6); }
+  .btn-admin-login.connected { color: var(--yellow); border-color: rgba(245,196,0,0.4); }
+
+  /* Galerie */
+  .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px; }
+  .gallery-card { position: relative; aspect-ratio: 4/3; overflow: hidden; background: var(--card); cursor: none; }
+  .gallery-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; display: block; }
+  .gallery-card:hover img { transform: scale(1.07); }
+  .gallery-card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,45,148,0.92) 0%, transparent 60%); opacity: 0; transition: opacity 0.3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; }
+  .gallery-card:hover .gallery-card-overlay { opacity: 1; }
+  .gallery-card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .gallery-card-sub { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+  .btn-delete { position: absolute; top: 10px; right: 10px; background: rgba(220,30,30,0.9); color: #fff; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 0.85rem; cursor: none; opacity: 0; transition: opacity 0.3s; display: none; align-items: center; justify-content: center; }
+  .btn-delete.admin-visible { display: flex; }
+  .gallery-card:hover .btn-delete { opacity: 1; }
+
+  /* Loading spinner */
+  .gallery-loading { grid-column: 1/-1; text-align: center; padding: 60px; color: var(--muted); font-size: 0.9rem; letter-spacing: 2px; }
+  .spinner { display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(245,196,0,0.2); border-top-color: var(--yellow); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .gallery-empty { grid-column: 1/-1; text-align: center; padding: 80px 20px; border: 2px dashed var(--border); color: var(--muted); }
+  .gallery-empty .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+
+  /* Modals */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(6px); }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: #0D2D94; border: 1px solid var(--border); padding: 50px; width: 90%; max-width: 460px; transform: translateY(30px); transition: transform 0.3s; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal h3 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 2px; margin-bottom: 8px; color: var(--yellow); }
+  .modal p { color: var(--muted); font-size: 0.85rem; margin-bottom: 28px; }
+  .modal-form { display: flex; flex-direction: column; gap: 18px; }
+  .modal-form label { font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+  .modal-form input[type="text"],
+  .modal-form input[type="password"] { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 13px 16px; font-family: 'Barlow', sans-serif; font-size: 0.95rem; outline: none; width: 100%; transition: border-color 0.3s; cursor: text; }
+  .modal-form input:focus { border-color: var(--yellow); }
+  .pw-error { color: #ff6060; font-size: 0.82rem; display: none; }
+  .pw-error.show { display: block; }
+
+  .drop-zone { border: 2px dashed var(--border); padding: 36px 20px; text-align: center; cursor: none; transition: all 0.3s; position: relative; }
+  .drop-zone.dragover { border-color: var(--yellow); background: rgba(245,196,0,0.06); }
+  .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: none; width: 100%; height: 100%; }
+  .drop-zone .dz-icon { font-size: 2.2rem; margin-bottom: 10px; }
+  .drop-zone p { color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+  .drop-zone strong { color: var(--yellow); }
+  .drop-preview { margin-top: 14px; display: none; }
+  .drop-preview img { max-height: 150px; max-width: 100%; border: 2px solid var(--yellow); }
+  .drop-preview.has-img { display: block; }
+
+  .upload-progress { display: none; margin-top: 10px; }
+  .upload-progress.show { display: block; }
+  .progress-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--yellow); width: 0%; transition: width 0.3s; }
+  .progress-text { font-size: 0.78rem; color: var(--muted); margin-top: 6px; text-align: center; }
+
+  .modal-actions { display: flex; gap: 14px; margin-top: 6px; }
+  .btn-modal-ok { flex: 1; background: var(--yellow); color: #0D2D94; border: none; padding: 15px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: 2px; text-transform: uppercase; cursor: none; transition: background 0.3s; }
+  .btn-modal-ok:hover { background: #ffd120; }
+  .btn-modal-ok:disabled { background: #888; color: #555; cursor: not-allowed; }
+  .btn-modal-cancel { flex: 1; background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 15px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: 2px; text-transform: uppercase; cursor: none; transition: all 0.3s; }
+  .btn-modal-cancel:hover { border-color: var(--text); color: var(--text); }
+
+  /* Lightbox */
+  .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.93); z-index: 600; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .lightbox.open { opacity: 1; pointer-events: all; }
+  .lightbox img { max-width: 90vw; max-height: 85vh; object-fit: contain; }
+  .lightbox-close { position: absolute; top: 24px; right: 30px; background: none; border: none; color: #fff; font-size: 2rem; cursor: none; opacity: 0.7; transition: opacity 0.2s; }
+  .lightbox-close:hover { opacity: 1; }
+  .lightbox-caption { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); text-align: center; color: #fff; white-space: nowrap; }
+  .lightbox-caption strong { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; }
+  .lightbox-caption span { display: block; color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+
+  /* CONTACT */
+  .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; margin-top: 60px; }
+  .contact-info { display: flex; flex-direction: column; gap: 40px; }
+  .contact-item { display: flex; gap: 24px; align-items: flex-start; padding-bottom: 40px; border-bottom: 1px solid var(--border); }
+  .contact-item:last-child { border-bottom: none; }
+  .contact-icon { width: 50px; height: 50px; background: rgba(245,196,0,0.12); border: 1px solid rgba(245,196,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+  .contact-item-label { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--yellow); margin-bottom: 8px; }
+  .contact-item-val { font-size: 1.1rem; font-weight: 500; }
+  .contact-item-sub { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+  .contact-form { display: flex; flex-direction: column; gap: 20px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group label { font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+  .form-group input, .form-group textarea, .form-group select { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 14px 18px; font-family: 'Barlow', sans-serif; font-size: 0.95rem; outline: none; transition: border-color 0.3s; cursor: text; }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--yellow); }
+  .form-group textarea { resize: vertical; min-height: 140px; }
+  .form-group select option { background: var(--mid); }
+  .btn-whatsapp { width: 100%; border: none; font-size: 1rem; padding: 18px; background: #25D366; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: none; transition: background 0.3s; display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .btn-whatsapp:hover { background: #1ebe5a; }
+  .btn-whatsapp .wa-icon { font-size: 1.3rem; }
+
+  .toast { position: fixed; bottom: 110px; right: 40px; padding: 16px 24px; border-radius: 4px; font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; letter-spacing: 1px; transform: translateY(20px); opacity: 0; transition: all 0.4s ease; z-index: 400; pointer-events: none; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: #25D366; color: #fff; box-shadow: 0 8px 30px rgba(37,211,102,0.4); }
+  .toast.error { background: #e53e3e; color: #fff; box-shadow: 0 8px 30px rgba(229,62,62,0.4); }
+
+  footer { background: #071880; padding: 60px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); }
+  .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 3px; color: var(--yellow); }
+  .footer-logo span { color: var(--muted); }
+  .footer-text { font-size: 0.8rem; color: var(--muted); }
+
+  .ticker { background: var(--yellow); padding: 14px 0; overflow: hidden; white-space: nowrap; }
+  .ticker-inner { display: inline-flex; animation: ticker 20s linear infinite; }
+  .ticker-item { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 3px; color: #0D2D94; padding: 0 40px; display: flex; align-items: center; gap: 20px; }
+  .ticker-item::after { content: '⚡'; font-size: 0.8em; }
+  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  .scroll-line { position: fixed; top: 0; left: 0; width: 3px; height: 0%; background: var(--yellow); z-index: 999; }
+  .whatsapp-float { position: fixed; bottom: 40px; right: 40px; background: #25D366; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; text-decoration: none; box-shadow: 0 4px 30px rgba(37,211,102,0.4); z-index: 200; transition: transform 0.3s; cursor: none; }
+  .whatsapp-float:hover { transform: scale(1.1); }
+  .reveal { opacity: 0; transform: translateY(40px); transition: all 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 900px) {
+    nav { padding: 20px 30px; } .nav-links { display: none; }
+    section { padding: 80px 30px; } .hero { padding: 0 30px; }
+    .hero h1 { font-size: 4.5rem; } .hero-stats { right: 30px; bottom: 30px; gap: 30px; }
+    .services-grid { grid-template-columns: 1fr; } .about-grid { grid-template-columns: 1fr; }
+    .about-visual { display: none; }
+    .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    .contact-grid { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 20px; text-align: center; }
+    .services-header, .real-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .modal { padding: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="scroll-line" id="scrollLine"></div>
+<div class="toast" id="toast"></div>
+
+<!-- Modal login admin -->
+<div class="modal-overlay" id="modalLogin">
+  <div class="modal">
+    <h3>🔐 Accès Admin</h3>
+    <p>Entrez votre mot de passe pour gérer les photos.</p>
+    <div class="modal-form">
+      <div>
+        <label>Mot de passe</label>
+        <input type="password" id="pwInput" placeholder="••••••••••••••••">
+      </div>
+      <div class="pw-error" id="pwError">❌ Mot de passe incorrect</div>
+      <div class="modal-actions">
+        <button class="btn-modal-ok" onclick="verifierMDP()">Connexion</button>
+        <button class="btn-modal-cancel" onclick="fermerModal('modalLogin')">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ajout photo -->
+<div class="modal-overlay" id="modalPhoto">
+  <div class="modal">
+    <h3>📸 Ajouter une photo</h3>
+    <p style="margin-bottom:20px;"></p>
+    <div class="modal-form">
+      <div>
+        <label>Titre</label>
+        <input type="text" id="photoTitle" placeholder="Ex: Villa résidentielle – Bobo">
+      </div>
+      <div>
+        <label>Description (optionnel)</label>
+        <input type="text" id="photoSub" placeholder="Ex: Installation complète 3 niveaux">
+      </div>
+      <div>
+        <label>Photo</label>
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept="image/*">
+          <div class="dz-icon">🖼️</div>
+          <p>Glissez votre photo ici<br>ou <strong>cliquez pour choisir</strong></p>
+          <div class="drop-preview" id="dropPreview">
+            <img id="previewImg" src="" alt="">
+          </div>
+        </div>
+        <div class="upload-progress" id="uploadProgress">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-text" id="progressText">Upload en cours...</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-modal-ok" id="btnAjouter" onclick="ajouterPhoto()">✅ Ajouter</button>
+        <button class="btn-modal-cancel" onclick="fermerModal('modalPhoto')">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" onclick="fermerLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-caption">
+    <strong id="lightboxTitle"></strong>
+    <span id="lightboxSub"></span>
+  </div>
+</div>
+
+<nav>
+  <div class="logo">Electro<span>Pro</span></div>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#about">À Propos</a></li>
+    <li><a href="#realisations">Réalisations</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<section class="hero" id="home">
+  <div class="hero-bg"></div><div class="hero-grid"></div><div class="hero-bolt">⚡</div>
+  <div class="hero-content">
+    <div class="hero-tag">Disponible – Bobo-Dioulasso & environs</div>
+    <h1>EXPERT EN<em>ÉLECTRICITÉ</em></h1>
+    <p class="hero-sub">Installation, dépannage, électronique, panneaux solaires et câblage réseau. Des solutions fiables pour particuliers et professionnels.</p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn-primary"><span>Demander un devis</span></a>
+      <a href="#services" class="btn-secondary">Voir les services</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">150+</div><div class="stat-label">Clients satisfaits</div></div>
+    <div class="stat"><div class="stat-num">8</div><div class="stat-label">Ans d'expérience</div></div>
+  </div>
+</section>
+
+<div class="ticker">
+  <div class="ticker-inner">
+    <div class="ticker-item">INSTALLATION ÉLECTRIQUE</div><div class="ticker-item">PANNEAUX SOLAIRES</div>
+    <div class="ticker-item">DÉPANNAGE 24/7</div><div class="ticker-item">CAMÉRAS DE SURVEILLANCE</div>
+    <div class="ticker-item">CÂBLAGE RÉSEAU</div><div class="ticker-item">RÉPARATION ÉLECTRONIQUE</div>
+    <div class="ticker-item">INSTALLATION ÉLECTRIQUE</div><div class="ticker-item">PANNEAUX SOLAIRES</div>
+    <div class="ticker-item">DÉPANNAGE 24/7</div><div class="ticker-item">CAMÉRAS DE SURVEILLANCE</div>
+    <div class="ticker-item">CÂBLAGE RÉSEAU</div><div class="ticker-item">RÉPARATION ÉLECTRONIQUE</div>
+  </div>
+</div>
+
+<section class="services" id="services">
+  <div class="services-header">
+    <div><div class="section-label">Ce que je fais</div><h2 class="section-title">MES SERVICES</h2></div>
+    <a href="#contact" class="btn-secondary">Demander un devis</a>
+  </div>
+  <div class="services-grid">
+    <div class="service-card reveal"><span class="service-icon">⚡</span><span class="service-num">01</span><h3>Installation Électrique</h3><p>Câblage complet de maisons et bâtiments neufs ou rénovations. Mise aux normes, tableau électrique, prises et interrupteurs.</p></div>
+    <div class="service-card reveal"><span class="service-icon">🔧</span><span class="service-num">02</span><h3>Dépannage Électrique</h3><p>Intervention rapide pour pannes électriques, disjoncteurs, courts-circuits. Disponible 7j/7 pour les urgences.</p></div>
+    <div class="service-card reveal"><span class="service-icon">☀️</span><span class="service-num">03</span><h3>Panneaux Solaires</h3><p>Installation complète de systèmes photovoltaïques pour l'autonomie énergétique. Dimensionnement, pose et maintenance.</p></div>
+    <div class="service-card reveal"><span class="service-icon">📷</span><span class="service-num">04</span><h3>Caméras de Surveillance</h3><p>Installation de systèmes CCTV et IP pour particuliers et entreprises. Accès à distance via smartphone.</p></div>
+    <div class="service-card reveal"><span class="service-icon">🔌</span><span class="service-num">05</span><h3>Câblage Réseau</h3><p>Installation réseau RJ45, fibre optique, WiFi professionnelle. Configuration routeurs, switches et infrastructure réseau.</p></div>
+    <div class="service-card reveal"><span class="service-icon">📱</span><span class="service-num">06</span><h3>Réparation Électronique</h3><p>Réparation d'appareils électroniques : TV, chargeurs, alimentations, cartes électroniques et équipements domestiques.</p></div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="about-grid">
+    <div class="about-visual reveal">
+      <div class="about-img-frame">
+        <div class="bolt-bg">⚡</div>
+        <img src="photo.jpeg" alt="Technicien électricien" class="about-photo">
+      </div>
+      <div class="about-accent"></div>
+      <div class="about-badge"><div class="about-badge-num">8+</div><div class="about-badge-text">Ans d'expérience</div></div>
+    </div>
+    <div class="about-content reveal">
+      <div class="section-label">Qui suis-je</div>
+      <h2 class="section-title">TECHNICIEN<br>CERTIFIÉ</h2>
+      <p>Je suis électricien et technicien en électronique basé à Bobo-Dioulasso, avec plus de 8 ans d'expérience dans l'installation et la maintenance de systèmes électriques résidentiels et industriels.</p>
+      <p>Mon engagement : un travail propre, sécurisé et durable. Chaque intervention est réalisée dans les règles de l'art, avec du matériel de qualité et le respect des normes en vigueur.</p>
+      <div class="skills-list">
+        <div class="skill-item">Électricité basse tension</div><div class="skill-item">Systèmes solaires (PV)</div>
+        <div class="skill-item">Automatismes</div><div class="skill-item">Domotique</div>
+        <div class="skill-item">Électronique de puissance</div><div class="skill-item">Réseaux informatiques</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RÉALISATIONS -->
+<section class="realisations" id="realisations">
+  <div class="real-header">
+    <div>
+      <div class="section-label">Portfolio</div>
+      <h2 class="section-title">MES RÉALISATIONS</h2>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <button class="btn-admin-login" id="btnAdminLogin" onclick="gererAdmin()">🔒</button>
+      <button class="btn-add-photo" id="btnAddPhoto" onclick="ouvrirModalPhoto()">
+        <span style="font-size:1.2rem">＋</span><span>Ajouter une photo</span>
+      </button>
+    </div>
+  </div>
+  <div class="gallery-grid" id="galleryGrid">
+    <div class="gallery-loading" id="galleryLoading">
+      <div class="spinner"></div>
+      <div>Chargement des réalisations...</div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="section-label">Me contacter</div>
+  <h2 class="section-title">PARLONS DE<br>VOTRE PROJET</h2>
+  <div class="contact-grid">
+    <div class="contact-info reveal">
+      <div class="contact-item"><div class="contact-icon">📞</div><div><div class="contact-item-label">Téléphone</div><div class="contact-item-val">+226 06 02 18 31</div><div class="contact-item-sub">Lun – Sam, 7h – 20h</div></div></div>
+      <div class="contact-item"><div class="contact-icon">💬</div><div><div class="contact-item-label">WhatsApp</div><div class="contact-item-val">+226 06 02 18 31</div><div class="contact-item-sub">Réponse rapide assurée</div></div></div>
+      <div class="contact-item"><div class="contact-icon">📍</div><div><div class="contact-item-label">Zone d'intervention</div><div class="contact-item-val">Bobo-Dioulasso</div><div class="contact-item-sub">Et communes environnantes</div></div></div>
+    </div>
+    <div class="contact-form reveal">
+      <div class="form-row">
+        <div class="form-group"><label>Votre nom</label><input type="text" id="nom" placeholder="Ex: Koné Moussa"></div>
+        <div class="form-group"><label>Téléphone</label><input type="tel" id="tel" placeholder="+226 XX XX XX XX"></div>
+      </div>
+      <div class="form-group">
+        <label>Type de service</label>
+        <select id="service">
+          <option value="">-- Choisir un service --</option>
+          <option>Installation électrique</option><option>Dépannage électrique</option>
+          <option>Panneaux solaires</option><option>Caméras de surveillance</option>
+          <option>Câblage réseau</option><option>Réparation électronique</option><option>Autre</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Décrivez votre projet</label><textarea id="message" placeholder="Décrivez brièvement votre besoin ou problème..."></textarea></div>
+      <button class="btn-whatsapp" onclick="envoyerWhatsApp()"><span class="wa-icon">💬</span><span>ENVOYER VIA WHATSAPP</span></button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Electro<span>Pro</span></div>
+  <div class="footer-text">© 2025 ElectroPro · Bobo-Dioulasso · Tous droits réservés</div>
+  <div class="footer-text" style="color:var(--yellow);font-size:0.75rem;letter-spacing:2px;">ÉLECTRICITÉ · ÉLECTRONIQUE · SOLAIRE</div>
+</footer>
+
+<a href="https://wa.me/22606021831" class="whatsapp-float" target="_blank">💬</a>
+
+<script>
+// ══════════════════════════════════════════
+//  SUPABASE CONFIG
+// ══════════════════════════════════════════
+const SUPABASE_URL = 'https://hlcjkhkwrtqktnanfqac.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_8IKsV8IQs3RYsvIBEhD_qQ_jFc-hSvN';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ══════════════════════════════════════════
+//  AUTH ADMIN
+// ══════════════════════════════════════════
+let adminConnecte = false;
+
+async function hashStr(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function gererAdmin() {
+  if (adminConnecte) {
+    adminConnecte = false;
+    document.getElementById('btnAddPhoto').classList.remove('visible');
+    document.getElementById('btnAdminLogin').classList.remove('connected');
+    document.getElementById('btnAdminLogin').textContent = '🔒';
+    document.querySelectorAll('.btn-delete').forEach(b => b.classList.remove('admin-visible'));
+  } else {
+    ouvrirModal('modalLogin');
+  }
+}
+
+async function verifierMDP() {
+  const val = document.getElementById('pwInput').value;
+  const h = await hashStr(val);
+  const correct = await hashStr('faustin larba tech');
+  if (h === correct) {
+    adminConnecte = true;
+    fermerModal('modalLogin');
+    document.getElementById('btnAddPhoto').classList.add('visible');
+    document.getElementById('btnAdminLogin').classList.add('connected');
+    document.getElementById('btnAdminLogin').textContent = '🔓';
+    document.querySelectorAll('.btn-delete').forEach(b => b.classList.add('admin-visible'));
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwError').classList.remove('show');
+  } else {
+    document.getElementById('pwError').classList.add('show');
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+}
+
+// ══════════════════════════════════════════
+//  GALERIE — CHARGEMENT DEPUIS SUPABASE
+// ══════════════════════════════════════════
+let photosData = [];
+
+async function chargerGalerie() {
+  document.getElementById('galleryLoading').style.display = 'block';
+  try {
+    const { data, error } = await db
+      .from('realisations')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    photosData = data || [];
+    renderGalerie();
+  } catch (err) {
+    console.error(err);
+    afficherToast('Erreur de chargement des photos', 'error');
+    renderGalerie();
+  }
+}
+
+function renderGalerie() {
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = '';
+
+  if (photosData.length === 0) {
+    grid.innerHTML = `
+      <div class="gallery-empty">
+        <div class="empty-icon">📷</div>
+        <p>Aucune réalisation pour l'instant.</p>
+      </div>`;
+    return;
+  }
+
+  photosData.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'gallery-card';
+    card.innerHTML = `
+      <img src="${p.image_url}" alt="${p.titre}" loading="lazy">
+      <div class="gallery-card-overlay">
+        <div class="gallery-card-title">${p.titre}</div>
+        ${p.description ? `<div class="gallery-card-sub">${p.description}</div>` : ''}
+      </div>
+      <button class="btn-delete${adminConnecte ? ' admin-visible' : ''}"
+        onclick="supprimerPhoto('${p.id}','${p.image_url}')" title="Supprimer">✕</button>
+    `;
+    card.querySelector('img').addEventListener('click', () => ouvrirLightbox(i));
+    grid.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════════════
+//  AJOUT PHOTO
+// ══════════════════════════════════════════
+let selectedFile = null;
+
+function ouvrirModalPhoto() {
+  document.getElementById('photoTitle').value = '';
+  document.getElementById('photoSub').value = '';
+  document.getElementById('previewImg').src = '';
+  document.getElementById('dropPreview').classList.remove('has-img');
+  document.getElementById('uploadProgress').classList.remove('show');
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('btnAjouter').disabled = false;
+  selectedFile = null;
+  ouvrirModal('modalPhoto');
+}
+
+const dropZone  = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+fileInput.addEventListener('change', e => { if (e.target.files[0]) chargerFichier(e.target.files[0]); });
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) chargerFichier(e.dataTransfer.files[0]);
+});
+
+function chargerFichier(file) {
+  if (!file.type.startsWith('image/')) return;
+  selectedFile = file;
+  const r = new FileReader();
+  r.onload = ev => {
+    document.getElementById('previewImg').src = ev.target.result;
+    document.getElementById('dropPreview').classList.add('has-img');
+  };
+  r.readAsDataURL(file);
+}
+
+async function ajouterPhoto() {
+  if (!selectedFile) { alert('Veuillez choisir une photo.'); return; }
+  const titre = document.getElementById('photoTitle').value.trim() || 'Réalisation';
+  const description = document.getElementById('photoSub').value.trim();
+  const btnAjouter = document.getElementById('btnAjouter');
+  const progress = document.getElementById('uploadProgress');
+  const fill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+
+  btnAjouter.disabled = true;
+  progress.classList.add('show');
+  fill.style.width = '30%';
+  progressText.textContent = 'Upload de la photo...';
+
+  try {
+    // 1. Upload image dans Supabase Storage
+    const ext = selectedFile.name.split('.').pop();
+    const fileName = `realisation_${Date.now()}.${ext}`;
+
+    const { data: uploadData, error: uploadError } = await db.storage
+      .from('photos')
+      .upload(fileName, selectedFile, { contentType: selectedFile.type });
+
+    if (uploadError) throw uploadError;
+    fill.style.width = '70%';
+    progressText.textContent = 'Sauvegarde en base...';
+
+    // 2. Récupérer l'URL publique
+    const { data: urlData } = db.storage.from('photos').getPublicUrl(fileName);
+    const imageUrl = urlData.publicUrl;
+
+    // 3. Enregistrer dans la table realisations
+    const { error: dbError } = await db
+      .from('realisations')
+      .insert([{ titre, description, image_url: imageUrl }]);
+
+    if (dbError) throw dbError;
+
+    fill.style.width = '100%';
+    progressText.textContent = '✅ Photo ajoutée !';
+
+    setTimeout(() => {
+      fermerModal('modalPhoto');
+      chargerGalerie();
+      afficherToast('✅ Photo ajoutée avec succès !', 'success');
+    }, 600);
+
+  } catch (err) {
+    console.error(err);
+    afficherToast('❌ Erreur : ' + err.message, 'error');
+    btnAjouter.disabled = false;
+    progress.classList.remove('show');
+  }
+}
+
+// ══════════════════════════════════════════
+//  SUPPRESSION
+// ══════════════════════════════════════════
+async function supprimerPhoto(id, imageUrl) {
+  if (!adminConnecte) return;
+  if (!confirm('Supprimer cette photo définitivement ?')) return;
+
+  try {
+    // Supprimer de la table
+    const { error: dbError } = await db.from('realisations').delete().eq('id', id);
+    if (dbError) throw dbError;
+
+    // Supprimer du storage
+    const fileName = imageUrl.split('/').pop();
+    await db.storage.from('photos').remove([fileName]);
+
+    chargerGalerie();
+    afficherToast('🗑️ Photo supprimée', 'success');
+  } catch (err) {
+    afficherToast('❌ Erreur suppression : ' + err.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════
+//  LIGHTBOX
+// ══════════════════════════════════════════
+function ouvrirLightbox(i) {
+  const p = photosData[i];
+  document.getElementById('lightboxImg').src = p.image_url;
+  document.getElementById('lightboxTitle').textContent = p.titre;
+  document.getElementById('lightboxSub').textContent = p.description || '';
+  document.getElementById('lightbox').classList.add('open');
+}
+function fermerLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === document.getElementById('lightbox')) fermerLightbox();
+});
+
+// ══════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════
+function ouvrirModal(id) { document.getElementById(id).classList.add('open'); }
+function fermerModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id === 'modalLogin') { document.getElementById('pwError').classList.remove('show'); document.getElementById('pwInput').value = ''; }
+}
+
+function afficherToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ══════════════════════════════════════════
+//  WHATSAPP
+// ══════════════════════════════════════════
+function envoyerWhatsApp() {
+  const nom = document.getElementById('nom').value.trim();
+  const tel = document.getElementById('tel').value.trim();
+  const service = document.getElementById('service').value;
+  const message = document.getElementById('message').value.trim();
+  if (!nom || !service) { alert('Veuillez renseigner au moins votre nom et le type de service.'); return; }
+  let texte = `Bonjour ! Je vous contacte depuis votre site web ElectroPro.\n\n`;
+  texte += `👤 *Nom :* ${nom}\n`;
+  if (tel) texte += `📞 *Téléphone :* ${tel}\n`;
+  texte += `🔧 *Service souhaité :* ${service}\n`;
+  if (message) texte += `📝 *Description :* ${message}\n`;
+  texte += `\nMerci de me recontacter dès que possible. ⚡`;
+  afficherToast('✅ Redirection vers WhatsApp...', 'success');
+  setTimeout(() => window.open(`https://wa.me/22606021831?text=${encodeURIComponent(texte)}`, '_blank'), 500);
+}
+
+// ══════════════════════════════════════════
+//  CURSOR
+// ══════════════════════════════════════════
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e => {
+  mx=e.clientX; my=e.clientY;
+  cursor.style.left=mx-5+'px'; cursor.style.top=my-5+'px';
+});
+(function animRing(){ rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12; ring.style.left=rx-18+'px'; ring.style.top=ry-18+'px'; requestAnimationFrame(animRing); })();
+document.querySelectorAll('a,button,.service-card,.gallery-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cursor.style.transform='scale(2)';ring.style.transform='scale(1.5)';ring.style.opacity='0.8';});
+  el.addEventListener('mouseleave',()=>{cursor.style.transform='scale(1)';ring.style.transform='scale(1)';ring.style.opacity='0.6';});
+});
+window.addEventListener('scroll',()=>{
+  document.getElementById('scrollLine').style.height=(window.scrollY/(document.body.scrollHeight-window.innerHeight)*100)+'%';
+});
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('visible'),i*80);});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape'){fermerModal('modalLogin');fermerModal('modalPhoto');fermerLightbox();}
+  if (e.key==='Enter' && document.getElementById('modalLogin').classList.contains('open')) verifierMDP();
+});
+
+// ── Charger la galerie au démarrage ──
+chargerGalerie();
+</script>
+</body>
+</html>
