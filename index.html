@@ -221,8 +221,27 @@
   .reveal { opacity: 0; transform: translateY(40px); transition: all 0.7s ease; }
   .reveal.visible { opacity: 1; transform: translateY(0); }
 
+
+  /* ── Burger menu ── */
+  .burger { display: none; flex-direction: column; gap: 6px; background: none; border: none; cursor: pointer; padding: 6px; z-index: 201; }
+  .burger span { display: block; width: 28px; height: 2px; background: var(--yellow); transition: all 0.3s; border-radius: 2px; }
+  .burger.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+  .burger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  .burger.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+  .mobile-menu {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,30,120,0.98); backdrop-filter: blur(12px);
+    z-index: 200; flex-direction: column; align-items: center; justify-content: center; gap: 36px;
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a { font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; letter-spacing: 4px; color: var(--text); text-decoration: none; transition: color 0.3s; }
+  .mobile-menu a:hover, .mobile-menu a:active { color: var(--yellow); }
+  .mobile-menu-close { background: none; border: 2px solid rgba(255,255,255,0.2); color: var(--muted); padding: 10px 30px; font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; margin-top: 20px; transition: all 0.3s; }
+  .mobile-menu-close:hover { border-color: var(--yellow); color: var(--yellow); }
+
   @media (max-width: 900px) {
-    nav { padding: 20px 30px; } .nav-links { display: none; }
+    nav { padding: 20px 30px; } .nav-links { display: none; } .burger { display: flex; }
     section { padding: 80px 30px; } .hero { padding: 0 30px; }
     .hero h1 { font-size: 4.5rem; } .hero-stats { right: 30px; bottom: 30px; gap: 30px; }
     .services-grid { grid-template-columns: 1fr; } .about-grid { grid-template-columns: 1fr; }
@@ -308,6 +327,15 @@
   </div>
 </div>
 
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#services" onclick="fermerMenuMobile()">Services</a>
+  <a href="#about" onclick="fermerMenuMobile()">À Propos</a>
+  <a href="#realisations" onclick="fermerMenuMobile()">Réalisations</a>
+  <a href="#contact" onclick="fermerMenuMobile()">Contact</a>
+  <button class="mobile-menu-close" onclick="fermerMenuMobile()">✕ Fermer</button>
+</div>
+
 <nav>
   <div class="logo">Electro<span>Pro</span></div>
   <ul class="nav-links">
@@ -316,6 +344,9 @@
     <li><a href="#realisations">Réalisations</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
+  <button class="burger" id="burger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
 
 <section class="hero" id="home">
@@ -366,7 +397,7 @@
     <div class="about-visual reveal">
       <div class="about-img-frame">
         <div class="bolt-bg">⚡</div>
-        <img src="photo.jpeg" alt="Technicien électricien" class="about-photo">
+        <img src="photo.jpeg" alt="Technicien électricien" class="about-photo" onerror="this.style.display='none'">
       </div>
       <div class="about-accent"></div>
       <div class="about-badge"><div class="about-badge-num">8+</div><div class="about-badge-text">Ans d'expérience</div></div>
@@ -501,7 +532,8 @@ async function verifierMDP() {
 let photosData = [];
 
 async function chargerGalerie() {
-  document.getElementById('galleryLoading').style.display = 'block';
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = `<div class="gallery-loading" id="galleryLoading"><div class="spinner"></div><div>Chargement des réalisations...</div></div>`;
   try {
     const { data, error } = await db
       .from('realisations')
@@ -513,6 +545,7 @@ async function chargerGalerie() {
   } catch (err) {
     console.error(err);
     afficherToast('Erreur de chargement des photos', 'error');
+    photosData = [];
     renderGalerie();
   }
 }
@@ -739,6 +772,19 @@ document.addEventListener('keydown', e => {
   if (e.key==='Escape'){fermerModal('modalLogin');fermerModal('modalPhoto');fermerLightbox();}
   if (e.key==='Enter' && document.getElementById('modalLogin').classList.contains('open')) verifierMDP();
 });
+
+
+// ── Mobile menu ──
+function toggleMenu() {
+  const burger = document.getElementById('burger');
+  const menu = document.getElementById('mobileMenu');
+  burger.classList.toggle('open');
+  menu.classList.toggle('open');
+}
+function fermerMenuMobile() {
+  document.getElementById('burger').classList.remove('open');
+  document.getElementById('mobileMenu').classList.remove('open');
+}
 
 // ── Charger la galerie au démarrage ──
 chargerGalerie();
